@@ -88,7 +88,7 @@
   // ==================================================================
   // MENU & KATEGORI
   // ==================================================================
-  const MN = { tab: 'menu', q: '', kat: '', st: 'aktif', data: null };
+  const MN = { tab: 'menu', q: '', kat: '', st: 'aktif', data: null, sel: {} };
   page('menu', { title: 'Menu & Kategori', icon: 'utensils', sec: 'Manajemen',
     async render(el) {
       if (!MN.data) el.innerHTML = skel(8);
@@ -99,19 +99,26 @@
       const head = '<div class="tabs"><button class="' + (MN.tab === 'menu' ? 'on' : '') + '" data-act="mnTab" data-t="menu">' + ic('utensils', 'sm') + 'Menu (' + d.menu.length + ')</button><button class="' + (MN.tab === 'kat' ? 'on' : '') + '" data-act="mnTab" data-t="kat">' + ic('layers', 'sm') + 'Kategori (' + d.kat.length + ')</button></div>';
       if (MN.tab === 'kat') {
         el.innerHTML = head + '<div class="page-head"><span class="sub">Urutan kategori = urutan tombol di halaman pelanggan.</span><button class="btn btn-primary" data-act="katForm">' + ic('plus', 'sm') + 'Tambah Kategori</button></div>' +
-          '<div class="table-wrap"><table class="tbl"><thead><tr><th style="width:90px">Urutan</th><th>Nama</th><th class="num">Jumlah menu</th><th>Status</th><th></th></tr></thead><tbody>' + d.kat.map((k, i) => '<tr><td><div class="row" style="gap:2px"><button class="btn btn-ghost btn-icon btn-sm" data-act="katUrut" data-i="' + i + '" data-d="-1"' + (i ? '' : ' disabled') + ' aria-label="Naik">' + ic('up', 'sm') + '</button><button class="btn btn-ghost btn-icon btn-sm" data-act="katUrut" data-i="' + i + '" data-d="1"' + (i < d.kat.length - 1 ? '' : ' disabled') + ' aria-label="Turun">' + ic('down', 'sm') + '</button></div></td><td><b>' + esc(k.nama) + '</b></td><td class="num">' + d.menu.filter(m => m.kat === k.id && m.status === 'aktif').length + '</td><td>' + (k.status === 'aktif' ? '<span class="badge b-green">Aktif</span>' : '<span class="badge b-neutral">Nonaktif</span>') + '</td><td class="acts"><button class="btn btn-ghost btn-sm" data-act="katForm" data-id="' + k.id + '">' + ic('edit', 'sm') + 'Ubah</button></td></tr>').join('') + '</tbody></table></div>';
+          '<div class="table-wrap"><table class="tbl"><thead><tr><th style="width:90px">Urutan</th><th>Nama</th><th class="num">Jumlah menu</th><th>Status</th><th></th></tr></thead><tbody>' + d.kat.map((k, i) => '<tr><td><div class="row" style="gap:2px"><button class="btn btn-ghost btn-icon btn-sm" data-act="katUrut" data-i="' + i + '" data-d="-1"' + (i ? '' : ' disabled') + ' aria-label="Naik">' + ic('up', 'sm') + '</button><button class="btn btn-ghost btn-icon btn-sm" data-act="katUrut" data-i="' + i + '" data-d="1"' + (i < d.kat.length - 1 ? '' : ' disabled') + ' aria-label="Turun">' + ic('down', 'sm') + '</button></div></td><td><b>' + esc(k.nama) + '</b></td><td class="num">' + d.menu.filter(m => m.kat === k.id && m.status === 'aktif').length + '</td><td>' + (k.status === 'aktif' ? '<span class="badge b-green">Aktif</span>' : '<span class="badge b-neutral">Nonaktif</span>') + '</td><td class="acts"><button class="btn btn-ghost btn-sm" data-act="katForm" data-id="' + k.id + '">' + ic('edit', 'sm') + 'Ubah</button><button class="btn btn-ghost btn-icon btn-sm" style="color:var(--red-text)" data-act="katHapus" data-id="' + k.id + '" aria-label="Hapus kategori ' + esc(k.nama) + '" title="Hapus kategori">' + ic('trash', 'sm') + '</button></td></tr>').join('') + '</tbody></table></div>';
         return;
       }
       const q = MN.q.toLowerCase(), list = d.menu.filter(m => (!MN.kat || m.kat === MN.kat) && (MN.st === 'semua' || m.status === MN.st) && (!q || m.nama.toLowerCase().indexOf(q) > -1));
       el.innerHTML = head + '<div class="page-head"><div class="filters"><div class="search"><input class="input" id="mn-q" type="search" placeholder="Cari menu…" value="' + esc(MN.q) + '" aria-label="Cari menu">' + ic('search') + '</div>' +
         '<select class="select" id="mn-kat" aria-label="Kategori"><option value="">Semua kategori</option>' + d.kat.map(k => '<option value="' + k.id + '"' + (MN.kat === k.id ? ' selected' : '') + '>' + esc(k.nama) + '</option>').join('') + '</select>' +
         '<select class="select" id="mn-st" aria-label="Status"><option value="aktif"' + (MN.st === 'aktif' ? ' selected' : '') + '>Aktif</option><option value="arsip"' + (MN.st === 'arsip' ? ' selected' : '') + '>Diarsipkan</option><option value="semua"' + (MN.st === 'semua' ? ' selected' : '') + '>Semua</option></select></div>' +
-        '<div class="row"><button class="btn btn-secondary" data-act="mnRefresh" title="Baca ulang dari Google Sheets">' + ic('refresh', 'sm') + '</button><button class="btn btn-primary" data-act="menuForm">' + ic('plus', 'sm') + 'Tambah Menu</button></div></div>' +
-        (list.length ? '<div class="table-wrap"><table class="tbl"><thead><tr><th>Menu</th><th>Kategori</th><th class="num">Harga</th><th class="num">Stok</th><th>Tersedia</th><th>Status</th><th></th></tr></thead><tbody>' + list.map(m => '<tr><td><div class="row"><div class="thumb" style="overflow:hidden">' + CF.img(m.foto, m.nama) + '</div><div><b>' + esc(m.nama) + '</b>' + (m.unggul ? ' <span class="badge b-orange">' + ic('star', 'sm') + 'Favorit</span>' : '') + (m.opsi ? ' <span class="badge b-neutral">opsi</span>' : '') + '<div class="small faint clamp2" style="max-width:340px">' + esc(m.desk) + '</div></div></div></td>' +
+        '<div class="row"><button class="btn btn-danger-o hide" id="mn-del" data-act="menuHapusSel">' + ic('trash', 'sm') + 'Hapus terpilih (<span id="mn-n">0</span>)</button><button class="btn btn-secondary" data-act="mnRefresh" title="Baca ulang dari Google Sheets">' + ic('refresh', 'sm') + '</button><button class="btn btn-primary" data-act="menuForm">' + ic('plus', 'sm') + 'Tambah Menu</button></div></div>' +
+        (list.length ? '<div class="table-wrap"><table class="tbl"><thead><tr><th class="chk"><input type="checkbox" id="mn-all" aria-label="Pilih semua menu yang tampil"></th><th>Menu</th><th>Kategori</th><th class="num">Harga</th><th class="num">Stok</th><th>Tersedia</th><th>Status</th><th></th></tr></thead><tbody>' + list.map(m => '<tr><td class="chk"><input type="checkbox" class="mn-c" data-id="' + m.id + '"' + (MN.sel[m.id] ? ' checked' : '') + ' aria-label="Pilih ' + esc(m.nama) + '"></td><td><div class="row"><div class="thumb" style="overflow:hidden">' + CF.img(m.foto, m.nama) + '</div><div><b>' + esc(m.nama) + '</b>' + (m.unggul ? ' <span class="badge b-orange">' + ic('star', 'sm') + 'Favorit</span>' : '') + (m.opsi ? ' <span class="badge b-neutral">opsi</span>' : '') + '<div class="small faint clamp2" style="max-width:340px">' + esc(m.desk) + '</div></div></div></td>' +
           '<td>' + esc(katName(m.kat)) + '</td><td class="num"><b>' + rp(m.harga) + '</b>' + (m.coret > m.harga ? '<div class="strike">' + rp(m.coret) + '</div>' : '') + '</td><td class="num">' + (m.stok === '' ? '<span class="faint">∞</span>' : m.stok) + '</td>' +
           '<td><label class="switch"><input type="checkbox" data-act2="mnAda" data-id="' + m.id + '"' + (m.tersedia ? ' checked' : '') + '><span class="tr"></span></label></td><td>' + (m.status === 'aktif' ? '<span class="badge b-green">Aktif</span>' : '<span class="badge b-neutral">Arsip</span>') + '</td>' +
-          '<td class="acts"><button class="btn btn-ghost btn-sm" data-act="menuForm" data-id="' + m.id + '">' + ic('edit', 'sm') + 'Ubah</button><button class="btn btn-ghost btn-sm" data-act="menuArsip" data-id="' + m.id + '">' + ic('archive', 'sm') + (m.status === 'aktif' ? 'Arsip' : 'Aktifkan') + '</button></td></tr>').join('') + '</tbody></table></div>'
+          '<td class="acts"><button class="btn btn-ghost btn-sm" data-act="menuForm" data-id="' + m.id + '">' + ic('edit', 'sm') + 'Ubah</button><button class="btn btn-ghost btn-sm" data-act="menuArsip" data-id="' + m.id + '">' + ic('archive', 'sm') + (m.status === 'aktif' ? 'Arsip' : 'Aktifkan') + '</button><button class="btn btn-ghost btn-icon btn-sm" style="color:var(--red-text)" data-act="menuHapus" data-id="' + m.id + '" aria-label="Hapus ' + esc(m.nama) + '" title="Hapus permanen">' + ic('trash', 'sm') + '</button></td></tr>').join('') + '</tbody></table></div>'
           : empty('utensils', 'Belum ada menu', 'Tambah menu pertama Anda atau ubah filter.'));
+      const upd = () => {
+        const n = Object.keys(MN.sel).length, bt = el.querySelector('#mn-del'); bt.classList.toggle('hide', !n); el.querySelector('#mn-n').textContent = n;
+        const all = el.querySelector('#mn-all'); if (all) { const k = list.filter(m => MN.sel[m.id]).length; all.checked = k > 0 && k === list.length; all.indeterminate = k > 0 && k < list.length; }
+      };
+      el.querySelectorAll('.mn-c').forEach(c => c.onchange = () => { if (c.checked) MN.sel[c.dataset.id] = 1; else delete MN.sel[c.dataset.id]; upd(); });
+      const allC = el.querySelector('#mn-all'); if (allC) allC.onchange = () => { list.forEach(m => { if (allC.checked) MN.sel[m.id] = 1; else delete MN.sel[m.id]; }); el.querySelectorAll('.mn-c').forEach(c => { c.checked = allC.checked; }); upd(); };
+      upd();
       const qi = el.querySelector('#mn-q'); qi.oninput = CF.debounce(() => { MN.q = qi.value; this.draw(el); const n = document.getElementById('mn-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 200);
       el.querySelector('#mn-kat').onchange = e => { MN.kat = e.target.value; this.draw(el); };
       el.querySelector('#mn-st').onchange = e => { MN.st = e.target.value; this.draw(el); };
@@ -120,6 +127,33 @@
   A.mnTab = el => { MN.tab = el.dataset.t; CF.pages.menu.draw(document.getElementById('page')); };
   A.mnRefresh = () => { MN._fresh = true; CF.renderPage(); };
   A.menuArsip = async el => { const m = MN.data.menu.filter(x => x.id === el.dataset.id)[0]; const r = await CF.api('menu.arsip', { id: m.id, arsip: m.status === 'aktif' }); if (!r.ok) return CF.err(r); CF.toast(r.msg, 'ok'); CF.renderPage(); };
+  async function hapusMenu(ids) {
+    const nm = ids.map(id => (MN.data.menu.filter(m => m.id === id)[0] || {}).nama).filter(Boolean);
+    if (!nm.length) return;
+    const ok = await CF.confirm({ title: nm.length === 1 ? 'Hapus menu "' + nm[0] + '"?' : 'Hapus ' + nm.length + ' menu?', danger: true, ok: 'Hapus Permanen',
+      html: (nm.length > 1 ? '<b>' + nm.slice(0, 8).map(esc).join(', ') + (nm.length > 8 ? ', dan ' + (nm.length - 8) + ' lainnya' : '') + '</b><br><br>' : '') +
+        'Menu dihapus permanen dan tidak tampil lagi ke pelanggan. Riwayat pesanan & laporan lama tetap utuh. Foto menu dipindah ke sampah Google Drive.<br><br><span class="small">Hanya ingin menyembunyikan sementara? Pakai <b>Arsip</b>.</span>' });
+    if (!ok) return;
+    const r = await CF.api('menu.hapus', { ids: ids }, { timeout: 90000 });
+    if (!r.ok) return CF.err(r);
+    ids.forEach(id => delete MN.sel[id]); CF.toast(r.msg, 'ok'); CF.renderPage();
+  }
+  A.menuHapus = el => hapusMenu([el.dataset.id]);
+  A.menuHapusSel = () => hapusMenu(Object.keys(MN.sel).filter(id => MN.data.menu.some(m => m.id === id)));
+  A.katHapus = async el => {
+    const k = MN.data.kat.filter(x => x.id === el.dataset.id)[0]; if (!k) return;
+    if (MN.data.kat.length <= 1) return CF.toast('Minimal harus ada 1 kategori.', 'warn');
+    const isi = MN.data.menu.filter(m => m.kat === k.id).length, lain = MN.data.kat.filter(x => x.id !== k.id);
+    if (!isi) {
+      if (!(await CF.confirm({ title: 'Hapus kategori "' + k.nama + '"?', danger: true, ok: 'Hapus', msg: 'Kategori ini kosong dan akan dihapus permanen.' }))) return;
+      const r = await CF.api('kategori.hapus', { id: k.id }); if (!r.ok) return CF.err(r); CF.toast(r.msg, 'ok'); return CF.renderPage();
+    }
+    const md = CF.modal({ title: 'Hapus kategori "' + k.nama + '"?', size: 'sm',
+      body: '<p class="muted">Kategori ini berisi <b>' + isi + ' menu</b>. Pilih kategori tujuan — menunya dipindahkan dulu, lalu kategori dihapus.</p><div class="field mt-12"><label class="label" for="kh-ke">Pindahkan menu ke</label><select class="select" id="kh-ke">' + lain.map(x => '<option value="' + x.id + '">' + esc(x.nama) + '</option>').join('') + '</select></div>' +
+        '<p class="help mt-8">Ingin menghapus menunya juga? Pilih menunya di tab Menu lalu "Hapus terpilih".</p>',
+      foot: '<button class="btn btn-secondary" data-x>Batal</button><button class="btn btn-danger" id="kh-ok">' + ic('trash', 'sm') + 'Pindahkan & Hapus</button>' });
+    md.$('#kh-ok').onclick = async () => { const r = await CF.busy(md.$('#kh-ok'), () => CF.api('kategori.hapus', { id: k.id, pindahKe: md.$('#kh-ke').value })); if (!r.ok) return CF.err(r); md.close(); CF.toast(r.msg, 'ok', 6000); CF.renderPage(); };
+  };
   A.menuForm = el => {
     const d = MN.data, m = d.menu.filter(x => x.id === el.dataset.id)[0] || { kat: (d.kat[0] || {}).id, tersedia: true, stok: '', opsi: '' };
     let foto = m.foto || '';
@@ -157,7 +191,7 @@
   // ==================================================================
   // PRICE LIST (layanan steam dll — hanya untuk dilihat pelanggan)
   // ==================================================================
-  const PL = { data: null, q: '' };
+  const PL = { data: null, q: '', sel: {} };
   page('pricelist', { title: 'Price List', icon: 'tag', sec: 'Manajemen',
     async render(el) {
       if (!PL.data) el.innerHTML = skel(6);
@@ -165,12 +199,30 @@
       const url = baseUrl(), groups = []; d.forEach(p => { if (groups.indexOf(p.grup) === -1) groups.push(p.grup); });
       el.innerHTML = '<div class="dash-grid" style="grid-template-columns:minmax(0,2fr) minmax(260px,1fr)"><div class="banner info">' + ic('info') + '<div>Price list hanya untuk <b>dilihat</b> pelanggan (promosi cafe & steam) — tidak ada tombol pesan/bayar. Tampil di tab "Price List" setelah scan QR meja, dan lewat QR khusus di samping.</div></div>' +
         '<div class="card pad-s row" style="gap:12px"><div style="width:84px;flex:none">' + CFQR.svg(url, { border: 1 }) + '</div><div class="grow"><div class="semi">QR Price List</div><div class="xs faint ellipsis">' + esc(url) + '</div><div class="row mt-8" style="gap:6px"><button class="btn btn-sm btn-secondary" data-act="qrPl">' + ic('printer', 'sm') + 'Cetak</button><a class="btn btn-sm btn-ghost" href="' + esc(url) + '" target="_blank" rel="noopener">' + ic('ext', 'sm') + 'Buka</a></div></div></div></div>' +
-        '<div class="page-head"><div class="filters"><div class="search"><input class="input" id="pl-q" type="search" placeholder="Cari layanan…" value="' + esc(PL.q) + '" aria-label="Cari">' + ic('search') + '</div></div><button class="btn btn-primary" data-act="plForm">' + ic('plus', 'sm') + 'Tambah Item</button></div>' +
-        (d.length ? groups.map(g => { const list = d.filter(p => p.grup === g && (!PL.q || p.nama.toLowerCase().indexOf(PL.q.toLowerCase()) > -1)); if (!list.length) return ''; return '<h3 class="mt-8">' + esc(g) + '</h3><div class="table-wrap"><table class="tbl"><thead><tr><th>Layanan</th><th>Satuan</th><th class="num">Harga</th><th>Status</th><th></th></tr></thead><tbody>' +
-          list.map(p => '<tr><td><div class="row"><div class="thumb" style="overflow:hidden">' + CF.img(p.foto, p.nama, true) + '</div><div><b>' + esc(p.nama) + '</b>' + (p.unggul ? ' <span class="badge b-orange">Favorit</span>' : '') + '<div class="small faint">' + esc(p.desk) + '</div></div></div></td><td>' + esc(p.satuan || '-') + '</td><td class="num"><b>' + rp(p.harga) + '</b>' + (p.coret > p.harga ? '<div class="strike">' + rp(p.coret) + '</div>' : '') + '</td><td>' + (p.status === 'aktif' ? '<span class="badge b-green">Tampil</span>' : '<span class="badge b-neutral">Arsip</span>') + '</td><td class="acts"><button class="btn btn-ghost btn-sm" data-act="plForm" data-id="' + p.id + '">' + ic('edit', 'sm') + 'Ubah</button></td></tr>').join('') + '</tbody></table></div>'; }).join('')
+        '<div class="page-head"><div class="filters"><div class="search"><input class="input" id="pl-q" type="search" placeholder="Cari layanan…" value="' + esc(PL.q) + '" aria-label="Cari">' + ic('search') + '</div></div><div class="row"><button class="btn btn-danger-o hide" id="pl-del" data-act="plHapusSel">' + ic('trash', 'sm') + 'Hapus terpilih (<span id="pl-n">0</span>)</button><button class="btn btn-primary" data-act="plForm">' + ic('plus', 'sm') + 'Tambah Item</button></div></div>' +
+        (d.length ? groups.map(g => { const list = d.filter(p => p.grup === g && (!PL.q || p.nama.toLowerCase().indexOf(PL.q.toLowerCase()) > -1)); if (!list.length) return ''; return '<h3 class="mt-8">' + esc(g) + '</h3><div class="table-wrap"><table class="tbl"><thead><tr><th class="chk"><input type="checkbox" class="pl-g" data-g="' + esc(g) + '" aria-label="Pilih semua di ' + esc(g) + '"></th><th>Layanan</th><th>Satuan</th><th class="num">Harga</th><th>Status</th><th></th></tr></thead><tbody>' +
+          list.map(p => '<tr><td class="chk"><input type="checkbox" class="pl-c" data-id="' + p.id + '" data-g="' + esc(g) + '"' + (PL.sel[p.id] ? ' checked' : '') + ' aria-label="Pilih ' + esc(p.nama) + '"></td><td><div class="row"><div class="thumb" style="overflow:hidden">' + CF.img(p.foto, p.nama, true) + '</div><div><b>' + esc(p.nama) + '</b>' + (p.unggul ? ' <span class="badge b-orange">Favorit</span>' : '') + '<div class="small faint">' + esc(p.desk) + '</div></div></div></td><td>' + esc(p.satuan || '-') + '</td><td class="num"><b>' + rp(p.harga) + '</b>' + (p.coret > p.harga ? '<div class="strike">' + rp(p.coret) + '</div>' : '') + '</td><td>' + (p.status === 'aktif' ? '<span class="badge b-green">Tampil</span>' : '<span class="badge b-neutral">Arsip</span>') + '</td><td class="acts"><button class="btn btn-ghost btn-sm" data-act="plForm" data-id="' + p.id + '">' + ic('edit', 'sm') + 'Ubah</button><button class="btn btn-ghost btn-icon btn-sm" style="color:var(--red-text)" data-act="plHapus" data-id="' + p.id + '" aria-label="Hapus ' + esc(p.nama) + '" title="Hapus permanen">' + ic('trash', 'sm') + '</button></td></tr>').join('') + '</tbody></table></div>'; }).join('')
           : empty('tag', 'Price list masih kosong', 'Tambahkan layanan steam atau produk lain yang ingin dipromosikan.'));
+      const upd = () => {
+        const n = Object.keys(PL.sel).length; el.querySelector('#pl-del').classList.toggle('hide', !n); el.querySelector('#pl-n').textContent = n;
+        el.querySelectorAll('.pl-g').forEach(gc => { const cs = [].filter.call(el.querySelectorAll('.pl-c'), c => c.dataset.g === gc.dataset.g), k = cs.filter(c => c.checked).length; gc.checked = k > 0 && k === cs.length; gc.indeterminate = k > 0 && k < cs.length; });
+      };
+      el.querySelectorAll('.pl-c').forEach(c => c.onchange = () => { if (c.checked) PL.sel[c.dataset.id] = 1; else delete PL.sel[c.dataset.id]; upd(); });
+      el.querySelectorAll('.pl-g').forEach(gc => gc.onchange = () => { el.querySelectorAll('.pl-c').forEach(c => { if (c.dataset.g !== gc.dataset.g) return; c.checked = gc.checked; if (gc.checked) PL.sel[c.dataset.id] = 1; else delete PL.sel[c.dataset.id]; }); upd(); });
+      upd();
       const qi = el.querySelector('#pl-q'); qi.oninput = CF.debounce(() => { PL.q = qi.value; this.render(el); }, 250);
     } });
+  async function hapusPl(ids) {
+    const nm = ids.map(id => ((PL.data || []).filter(p => p.id === id)[0] || {}).nama).filter(Boolean);
+    if (!nm.length) return;
+    if (!(await CF.confirm({ title: nm.length === 1 ? 'Hapus "' + nm[0] + '"?' : 'Hapus ' + nm.length + ' item price list?', danger: true, ok: 'Hapus Permanen',
+      html: (nm.length > 1 ? '<b>' + nm.slice(0, 8).map(esc).join(', ') + (nm.length > 8 ? ', dan ' + (nm.length - 8) + ' lainnya' : '') + '</b><br><br>' : '') + 'Item dihapus permanen dari Price List. Hanya ingin menyembunyikan sementara? Ubah item lalu matikan "Tampilkan".' }))) return;
+    const r = await CF.api('pricelist.hapus', { ids: ids }, { timeout: 90000 });
+    if (!r.ok) return CF.err(r);
+    ids.forEach(id => delete PL.sel[id]); CF.toast(r.msg, 'ok'); CF.renderPage();
+  }
+  A.plHapus = el => hapusPl([el.dataset.id]);
+  A.plHapusSel = () => hapusPl(Object.keys(PL.sel).filter(id => (PL.data || []).some(p => p.id === id)));
   A.plForm = el => {
     const p = (PL.data || []).filter(x => x.id === el.dataset.id)[0] || { status: 'aktif', grup: '', satuan: 'per unit' };
     const groups = []; (PL.data || []).forEach(x => { if (groups.indexOf(x.grup) === -1) groups.push(x.grup); });
@@ -392,9 +444,9 @@
         '<select class="select" id="lp-ks"><option value="">Semua kasir</option>' + kasir.map(k => '<option' + (LP.f.kasir === k ? ' selected' : '') + '>' + esc(k) + '</option>').join('') + '</select>' +
         '<select class="select" id="lp-mt"><option value="">Semua metode</option>' + met.map(k => '<option value="' + k + '"' + (LP.f.metode === k ? ' selected' : '') + '>' + esc(CF.LABEL_METODE[k] || k) + '</option>').join('') + '</select>' +
         '<select class="select" id="lp-st"><option value="">Semua status</option>' + ['berhasil', 'pending', 'gagal', 'dibatalkan'].map(k => '<option value="' + k + '"' + (LP.f.status === k ? ' selected' : '') + '>' + k[0].toUpperCase() + k.slice(1) + '</option>').join('') + '</select></div>' +
-        '<div class="table-wrap mt-12"><table class="tbl"><thead><tr>' + th(1, 'Waktu') + th(0, 'No. Pesanan') + th(2, 'Meja') + '<th>Item</th>' + th(4, 'Kasir') + th(5, 'Metode') + '<th>Status</th>' + th(6, 'Total', 'num') + '</tr></thead><tbody>' +
-        (rows.slice((pg - 1) * per, pg * per).map(r => '<tr><td class="nowrap tnum">' + CF.tglJam(r[1]) + '</td><td><b>' + esc(r[13]) + '</b><div class="xs faint">' + esc(r[0]) + '</div></td><td>' + esc(r[2] || '-') + '</td><td class="small" style="max-width:280px">' + esc(r[9]) + '</td><td class="small">' + esc(r[4] || '-') + '</td><td class="small">' + esc(CF.LABEL_METODE[r[5]] || r[5] || '-') + '</td><td><span class="badge ' + STLAP[statusLap(r)] + '">' + statusLap(r) + '</span></td><td class="num"><b>' + rp(r[6]) + '</b></td></tr>').join('') || '<tr><td colspan="8" class="center faint" style="padding:30px">Tidak ada transaksi sesuai filter.</td></tr>') +
-        (rows.length ? '<tr><td colspan="7" class="right semi">Total (berhasil)</td><td class="num"><b class="green">' + rp(rows.filter(r => statusLap(r) === 'berhasil').reduce((a, r) => a + r[6], 0)) + '</b></td></tr>' : '') + '</tbody></table></div>' + pager(rows.length, pg, per, 'lpPg');
+        '<div class="table-wrap mt-12"><table class="tbl"><thead><tr>' + th(1, 'Waktu') + th(0, 'No. Pesanan') + th(2, 'Meja') + '<th>Item</th>' + th(4, 'Kasir') + th(5, 'Metode') + '<th>Status</th>' + th(6, 'Total', 'num') + '<th></th></tr></thead><tbody>' +
+        (rows.slice((pg - 1) * per, pg * per).map(r => '<tr><td class="nowrap tnum">' + CF.tglJam(r[1]) + '</td><td><b>' + esc(r[13]) + '</b><div class="xs faint">' + esc(r[0]) + '</div></td><td>' + esc(r[2] || '-') + '</td><td class="small" style="max-width:280px">' + esc(r[9]) + '</td><td class="small">' + esc(r[4] || '-') + '</td><td class="small">' + esc(CF.LABEL_METODE[r[5]] || r[5] || '-') + '</td><td><span class="badge ' + STLAP[statusLap(r)] + '">' + statusLap(r) + '</span></td><td class="num"><b>' + rp(r[6]) + '</b></td><td class="acts"><button class="btn btn-ghost btn-icon btn-sm" style="color:var(--red-text)" data-act="lpHapus" data-id="' + esc(r[0]) + '" aria-label="Hapus pesanan ' + esc(r[13]) + '" title="Hapus permanen">' + ic('trash', 'sm') + '</button></td></tr>').join('') || '<tr><td colspan="9" class="center faint" style="padding:30px">Tidak ada transaksi sesuai filter.</td></tr>') +
+        (rows.length ? '<tr><td colspan="7" class="right semi">Total (berhasil)</td><td class="num"><b class="green">' + rp(rows.filter(r => statusLap(r) === 'berhasil').reduce((a, r) => a + r[6], 0)) + '</b></td><td></td></tr>' : '') + '</tbody></table></div>' + pager(rows.length, pg, per, 'lpPg');
       const bind = (id, k, ev) => { const e = body.querySelector(id); e[ev || 'onchange'] = CF.debounce(() => { LP.f[k] = e.value; LP.pg = 1; this.draw(body); const n = body.querySelector(id); if (ev) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, ev ? 250 : 0); };
       bind('#lp-q', 'q', 'oninput'); bind('#lp-pr', 'produk', 'oninput'); bind('#lp-ks', 'kasir'); bind('#lp-mt', 'metode'); bind('#lp-st', 'status');
     } });
@@ -404,6 +456,11 @@
   A.lpSub = el => { LP.sub = el.dataset.s; CF.pages.laporan.draw(lpBody()); };
   A.lpSort = el => { const k = +el.dataset.k; LP.sort = { k: k, d: LP.sort.k === k ? -LP.sort.d : -1 }; CF.pages.laporan.draw(lpBody()); };
   A.lpPg = el => { LP.pg = +el.dataset.p; CF.pages.laporan.draw(lpBody()); };
+  A.lpHapus = el => {
+    const r = LP.data.rows.filter(x => x[0] === el.dataset.id)[0]; if (!r) return;
+    CF.dialogHapus({ np: r[13] || r[0], mn: r[2], tot: r[6], sb: r[8] }, (alasan, konf) => CF.api('pesanan.hapus', { id: r[0], alasan: alasan, konfirmasi: konf }, { timeout: 90000 }),
+      () => { LP.data = null; dashT = 0; CF.refreshLive(); CF.renderPage(); });
+  };
   A.lpPdf = async el => { const r = await CF.busy(el, () => CF.api('laporan.pdf', { dari: LP.dari, sampai: LP.sampai, jenis: LP.sub === 'stok' ? 'stok' : 'transaksi', filter: LP.f }, { timeout: 90000 })); if (!r.ok) return CF.err(r); CF.download(r.data.nama, r.data.b64, 'application/pdf'); };
   A.lpXls = () => {
     if (!LP.data) return;
@@ -440,7 +497,7 @@
   // ACTIVITY LOG (hanya baca)
   // ==================================================================
   const LG = { data: null, pg: 1, dari: '', sampai: '', aksi: '', q: '' };
-  const AKSI = ['BATAL_PESANAN', 'UBAH_HARGA', 'DISKON_MANUAL', 'MINTA_DISKON', 'SETUJUI_DISKON', 'TOLAK_DISKON', 'STOK_MASUK', 'STOK_KELUAR', 'STOK_KOREKSI', 'KETERSEDIAAN_MENU', 'BUKA_SESI', 'TUTUP_SESI', 'TUTUP_PAKSA_SESI', 'VERIFIKASI_BAYAR', 'TOLAK_BAYAR', 'TAMBAH_MENU', 'UBAH_MENU', 'TAMBAH_PENGGUNA', 'UBAH_PENGGUNA', 'RESET_SANDI', 'UBAH_PENGATURAN', 'UBAH_RAHASIA', 'EKSPOR_LAPORAN', 'LOGIN_DIKUNCI', 'LOGIN_DARURAT', 'IMPORT_RUN', 'GANTI_QR_MEJA', 'ARSIP_DATA'];
+  const AKSI = ['BATAL_PESANAN', 'UBAH_HARGA', 'DISKON_MANUAL', 'MINTA_DISKON', 'SETUJUI_DISKON', 'TOLAK_DISKON', 'STOK_MASUK', 'STOK_KELUAR', 'STOK_KOREKSI', 'KETERSEDIAAN_MENU', 'BUKA_SESI', 'TUTUP_SESI', 'TUTUP_PAKSA_SESI', 'VERIFIKASI_BAYAR', 'TOLAK_BAYAR', 'TAMBAH_MENU', 'UBAH_MENU', 'TAMBAH_PENGGUNA', 'UBAH_PENGGUNA', 'RESET_SANDI', 'UBAH_PENGATURAN', 'UBAH_RAHASIA', 'EKSPOR_LAPORAN', 'LOGIN_DIKUNCI', 'LOGIN_DARURAT', 'IMPORT_RUN', 'GANTI_QR_MEJA', 'ARSIP_DATA', 'HAPUS_PESANAN', 'HAPUS_PESANAN_MASSAL', 'HAPUS_MENU', 'HAPUS_KATEGORI', 'HAPUS_PRICELIST'];
   page('log', { title: 'Activity Log', icon: 'history', sec: 'Laporan',
     async render(el) {
       if (!LG.dari) { LG.sampai = CF.isoHari(); LG.dari = CF.isoHari(Date.now() - 7 * 86400e3); }
@@ -449,7 +506,7 @@
       const get = async () => { LG.data = await load('log.list', { dari: LG.dari, sampai: LG.sampai, aksi: LG.aksi, q: LG.q }, el.querySelector('#lg-body')); LG.pg = 1; draw(); };
       const draw = () => {
         if (!LG.data) return; const per = 30, rows = LG.data.slice((LG.pg - 1) * per, LG.pg * per);
-        el.querySelector('#lg-body').innerHTML = LG.data.length ? '<div class="table-wrap"><table class="tbl"><thead><tr><th>Waktu</th><th>Pengguna</th><th>Aksi</th><th>Objek</th><th>Lama → Baru</th><th>Alasan</th></tr></thead><tbody>' + rows.map(l => '<tr><td class="nowrap small tnum">' + CF.tglJam(l.waktu) + '</td><td><b class="small">' + esc(l.user) + '</b><div class="xs faint">' + esc(CF.ROLE_LABEL[l.peran] || l.peran) + '</div></td><td><span class="badge ' + (/BATAL|TOLAK|PAKSA|DIKUNCI|DARURAT/.test(l.aksi) ? 'b-red' : /HARGA|DISKON|STOK|RAHASIA/.test(l.aksi) ? 'b-amber' : 'b-neutral') + '">' + esc(l.aksi) + '</span></td><td class="small">' + esc(l.ent) + (l.eid ? ' <b>' + esc(l.eid) + '</b>' : '') + '</td><td class="small" style="max-width:320px">' + (l.lama ? '<span class="faint" style="text-decoration:line-through">' + esc(l.lama) + '</span> → ' : '') + esc(l.baru) + '</td><td class="small" style="max-width:220px">' + esc(l.alasan) + '</td></tr>').join('') + '</tbody></table></div>' + pager(LG.data.length, LG.pg, per, 'lgPg') : empty('history', 'Tidak ada aktivitas', 'Pada periode & filter ini.');
+        el.querySelector('#lg-body').innerHTML = LG.data.length ? '<div class="table-wrap"><table class="tbl"><thead><tr><th>Waktu</th><th>Pengguna</th><th>Aksi</th><th>Objek</th><th>Lama → Baru</th><th>Alasan</th></tr></thead><tbody>' + rows.map(l => '<tr><td class="nowrap small tnum">' + CF.tglJam(l.waktu) + '</td><td><b class="small">' + esc(l.user) + '</b><div class="xs faint">' + esc(CF.ROLE_LABEL[l.peran] || l.peran) + '</div></td><td><span class="badge ' + (/BATAL|TOLAK|PAKSA|DIKUNCI|DARURAT|HAPUS/.test(l.aksi) ? 'b-red' : /HARGA|DISKON|STOK|RAHASIA/.test(l.aksi) ? 'b-amber' : 'b-neutral') + '">' + esc(l.aksi) + '</span></td><td class="small">' + esc(l.ent) + (l.eid ? ' <b>' + esc(l.eid) + '</b>' : '') + '</td><td class="small" style="max-width:320px">' + (l.lama ? '<span class="faint" style="text-decoration:line-through">' + esc(l.lama) + '</span> → ' : '') + esc(l.baru) + '</td><td class="small" style="max-width:220px">' + esc(l.alasan) + '</td></tr>').join('') + '</tbody></table></div>' + pager(LG.data.length, LG.pg, per, 'lgPg') : empty('history', 'Tidak ada aktivitas', 'Pada periode & filter ini.');
       };
       LG.draw = draw;
       el.querySelector('#lg-d').onchange = e => { LG.dari = e.target.value; get(); }; el.querySelector('#lg-s').onchange = e => { LG.sampai = e.target.value; get(); };
@@ -463,7 +520,7 @@
   //             price list, import data, sistem)
   // ==================================================================
   const PS = { tab: 'identitas', d: null };
-  const TABS = [['identitas', 'Identitas Aplikasi', 'palette'], ['bayar', 'Pembayaran & Situs', 'wallet'], ['pajak', 'Pajak & Struk', 'receipt'], ['sesi', 'Sesi Meja & Diskon', 'grid'], ['pl', 'Price List & Promo', 'tag'], ['import', 'Import Data', 'db'], ['sistem', 'Sistem', 'settings']];
+  const TABS = [['identitas', 'Identitas Aplikasi', 'palette'], ['bayar', 'Pembayaran & Situs', 'wallet'], ['pajak', 'Pajak & Struk', 'receipt'], ['sesi', 'Sesi Meja & Diskon', 'grid'], ['pl', 'Price List & Promo', 'tag'], ['sambutan', 'Pop-up Sambutan', 'sparkles'], ['import', 'Import Data', 'db'], ['sistem', 'Sistem', 'settings']];
   const inp = (k, label, help, type, attrs) => '<div class="field"><label class="label" for="s-' + k + '">' + label + '</label><input class="input" id="s-' + k + '" data-k="' + k + '" type="' + (type || 'text') + '" value="' + esc(PS.d.set[k]) + '" ' + (attrs || '') + '>' + (help ? '<span class="help">' + help + '</span>' : '') + '</div>';
   page('pengaturan', { title: 'Pengaturan', icon: 'settings', sec: 'Sistem',
     async render(el) {
@@ -517,7 +574,7 @@
         b.querySelectorAll('[data-met]').forEach(c => c.onchange = () => { b.querySelector('#s-metode_aktif').value = [].filter.call(b.querySelectorAll('[data-met]'), x => x.checked).map(x => x.dataset.met).join(','); });
         bindDrop({ $: s2 => b.querySelector(s2) }, 's-qris', 'qris', u => { b.querySelector('#s-qris_statis_url').value = u; }, { max: 1200, maxBytes: 400000 });
       } else if (t === 'pajak') {
-        b.innerHTML = '<div class="card pad col gap-12"><h3>Pajak & biaya layanan</h3><div class="grid-form">' + inp('pajak_persen', 'Pajak (%)', '', 'number', 'min="0" max="100" step="0.1"') + inp('label_pajak', 'Label pajak', 'mis. PB1, PPN') + inp('layanan_persen', 'Biaya layanan (%)', '0 = tidak ada', 'number', 'min="0" max="100" step="0.1"') +
+        b.innerHTML = '<div class="card pad col gap-12"><h3>Pajak & biaya layanan</h3><div class="grid-form">' + inp('pajak_persen', 'Pajak (%)', '0 = tanpa pajak (baris pajak tidak ditampilkan)', 'number', 'min="0" max="100" step="0.1"') + inp('label_pajak', 'Label pajak', 'mis. PB1, PPN') + inp('layanan_persen', 'Biaya layanan (%)', '0 = tidak ada', 'number', 'min="0" max="100" step="0.1"') +
           '<div class="field" style="justify-content:flex-end">' + sw('harga_termasuk_pajak', s.harga_termasuk_pajak === 'Y', 'Harga menu sudah termasuk pajak') + '</div></div></div>' +
           '<div class="card pad col gap-12"><h3>Struk</h3><div class="field"><span class="label">Ukuran kertas printer thermal</span><div class="seg"><button type="button" data-kertas="58" class="' + (s.struk_kertas === '58' ? 'on' : '') + '">58 mm</button><button type="button" data-kertas="80" class="' + (s.struk_kertas !== '58' ? 'on' : '') + '">80 mm</button></div><input type="hidden" data-k="struk_kertas" id="s-struk_kertas" value="' + esc(s.struk_kertas) + '"></div>' +
           inp('struk_footer', 'Pesan di bawah struk') + sw('struk_tampil_logo', s.struk_tampil_logo === 'Y', 'Tampilkan logo di struk') + inp('batas_bayar_menit', 'Batas waktu pembayaran online (menit)', 'QRIS/VA kedaluwarsa setelah waktu ini.', 'number', 'min="5" max="120"') + '</div>' +
@@ -532,6 +589,27 @@
         b.innerHTML = '<div class="card pad col gap-12"><h3>Halaman Price List (hanya lihat)</h3>' + inp('pricelist_judul', 'Judul') + inp('pricelist_subjudul', 'Sub-judul') + '<div class="field"><label class="label" for="s-pricelist_info">Catatan di bawah</label><textarea class="textarea" id="s-pricelist_info" data-k="pricelist_info">' + esc(s.pricelist_info) + '</textarea></div>' +
           sw('pricelist_tampil_menu', s.pricelist_tampil_menu !== 'N', 'Tampilkan juga menu cafe di Price List') + '</div>' +
           '<div class="card pad col gap-12"><h3>Promo Hari Ini</h3>' + inp('promo_harian_selesai', 'Hitung mundur berakhir pukul (WIB)', 'Menu dengan "harga coret" tampil di Promo Hari Ini. Kosongkan untuk tanpa hitung mundur.', 'time') + '</div>' + save;
+      } else if (t === 'sambutan') {
+        let wm = 'meja';
+        b.innerHTML = '<div class="dash-grid" style="grid-template-columns:minmax(0,1.1fr) minmax(300px,1fr);align-items:start"><div class="card pad col gap-16"><h3>Pop-up Sambutan</h3>' +
+          '<p class="small muted">Muncul saat pelanggan membuka halaman dari <b>QR meja</b> atau <b>QR Price List</b> (sekali per hari per HP): gambar promosi, logo, ucapan selamat datang, promo yang ditandai "Tampil", dan pilihan <b>Pesan Makanan</b> atau <b>Price List Car Wash</b>.</p>' +
+          sw('sambutan_aktif', s.sambutan_aktif !== 'N', 'Tampilkan pop-up sambutan') +
+          '<div class="grid-form">' + inp('sambutan_judul', 'Teks di atas nama cafe', 'mis. Selamat Datang di') + inp('sambutan_label', 'Label usaha', 'mis. Cafe & Car Wash') + '</div>' +
+          '<div class="field"><label class="label" for="s-sambutan_subjudul">Kalimat sambutan</label><textarea class="textarea" id="s-sambutan_subjudul" data-k="sambutan_subjudul" maxlength="300">' + esc(s.sambutan_subjudul) + '</textarea></div>' +
+          '<div class="field"><span class="label">Gambar promosi (disarankan mendatar, mis. 1200 × 800)</span>' + dropzone('s-wl', 'Pilih gambar promosi', s.sambutan_gambar_url) +
+          '<input type="hidden" data-k="sambutan_gambar_url" id="s-sambutan_gambar_url" value="' + esc(s.sambutan_gambar_url) + '">' +
+          '<div class="row wrap mt-8" style="gap:8px"><button class="btn btn-ghost btn-sm" data-act="hapusWl">' + ic('x', 'sm') + 'Tanpa gambar (latar warna + ikon)</button><span class="help">Nama, logo & warna diambil dari tab Identitas Aplikasi.</span></div></div></div>' +
+          '<div class="card pad" style="position:sticky;top:84px"><div class="row between wrap" style="gap:8px"><h3>Pratinjau</h3><div class="seg"><button type="button" data-wm="meja" class="on">Dari QR Meja</button><button type="button" data-wm="pl">Dari QR Price List</button></div></div>' +
+          '<div class="wl-preview mt-12" id="wl-pv"></div><p class="help mt-8">Promo yang ditandai "Tampil" di menu Promo ikut muncul di pop-up.</p></div></div>' + save;
+        const pv = () => {
+          const st2 = Object.assign({}, PS.d.set);
+          b.querySelectorAll('[data-k]').forEach(i => { st2[i.dataset.k] = i.type === 'checkbox' ? (i.checked ? 'Y' : 'N') : i.value; });
+          b.querySelector('#wl-pv').innerHTML = st2.sambutan_aktif === 'N' ? '<div class="empty"><div class="art">' + ic('eyeOff') + '</div><h4>Pop-up dimatikan</h4><p>Pelanggan langsung masuk ke menu.</p></div>' : CF.welcomeCard(st2, { meja: wm === 'meja' ? '07' : '', mode: wm, showMenu: st2.pricelist_tampil_menu !== 'N' });
+        };
+        b.querySelectorAll('[data-wm]').forEach(x => x.onclick = () => { wm = x.dataset.wm; b.querySelectorAll('[data-wm]').forEach(y => y.classList.toggle('on', y === x)); pv(); });
+        b.querySelectorAll('[data-k]').forEach(i => { i.addEventListener('input', pv); i.addEventListener('change', pv); });
+        bindDrop({ $: s2 => b.querySelector(s2) }, 's-wl', 'sambutan', u => { b.querySelector('#s-sambutan_gambar_url').value = u; pv(); }, { max: 1400, maxBytes: 450000 });
+        PS.pv = pv; pv();
       } else if (t === 'import') {
         drawImport(b);
       } else if (t === 'sistem') {
@@ -542,6 +620,7 @@
   A.psTab = el => { PS.tab = el.dataset.t; document.querySelectorAll('.set-nav .nav-item').forEach(x => x.classList.toggle('on', x === el)); CF.pages.pengaturan.draw(document.getElementById('ps-body')); };
   A.psReset = () => CF.pages.pengaturan.draw(document.getElementById('ps-body'));
   A.warnaDefault = () => { const b = document.getElementById('ps-body'); b.querySelector('#s-warna_primer').value = '#C2410C'; b.querySelector('#s-warna_aksen').value = '#F97316'; b.querySelector('#c-primer').value = '#C2410C'; b.querySelector('#c-aksen').value = '#F97316'; b.querySelector('#s-warna_primer').dispatchEvent(new Event('input')); };
+  A.hapusWl = () => { const i = document.getElementById('s-sambutan_gambar_url'); if (!i) return; i.value = ''; const dz = document.getElementById('s-wl-dz'), img = dz && dz.querySelector('img'); if (img) img.remove(); if (PS.pv) PS.pv(); CF.toast('Gambar dilepas. Klik Simpan Perubahan.', 'info'); };
   A.hapusLogo = () => { const b = document.getElementById('ps-body'); b.querySelector('#s-logo_url').value = ''; b.querySelector('#s-logo_thumb_url').value = ''; CF.toast('Logo akan dihapus setelah Anda menyimpan.', 'info'); };
   A.isiUrl = el => { const i = document.getElementById('s-url_frontend'); i.value = el.dataset.v.replace(/\/+$/, ''); };
   A.psSave = async el => {
@@ -614,8 +693,31 @@
       '<div class="card pad"><h3>Ukuran data</h3><div class="mt-12">' + Object.keys(s.baris).map(k => row(k, CF.num(s.baris[k]) + ' baris')).join('') + row('Total sel spreadsheet', CF.num(s.sel) + ' / 10.000.000') + '<div class="progress mt-8"><span style="width:' + Math.min(100, s.sel / 1e5) + '%"></span></div>' + row('Script Properties', s.propsKB + ' KB (' + s.propsJumlah + ' kunci)') + row('Spreadsheet arsip', s.arsip ? 'ada' : 'belum') + '</div></div></div>' +
       '<div class="card pad col gap-12"><h3>Pemeliharaan</h3><div class="row wrap"><button class="btn btn-secondary" data-act="segarkan" data-loading="Memuat ulang…">' + ic('refresh', 'sm') + 'Muat ulang data dari Google Sheets</button><span class="small faint">Pakai setelah Anda mengedit langsung di spreadsheet.</span></div>' +
       '<div class="divider"></div><div class="row wrap"><select class="select" id="ar-b" style="width:auto"><option value="3">Lebih lama dari 3 bulan</option><option value="6">Lebih lama dari 6 bulan</option><option value="12">Lebih lama dari 12 bulan</option></select><button class="btn btn-secondary" data-act="arsip" data-loading="Mengarsipkan…">' + ic('archive', 'sm') + 'Arsipkan data lama</button></div>' +
-      '<p class="help">Pesanan, item, transaksi, mutasi stok & log lama dipindah ke spreadsheet arsip terpisah agar app tetap cepat. Ringkasan harian tetap tersimpan sehingga grafik & total laporan lama tetap utuh.</p></div>';
+      '<p class="help">Pesanan, item, transaksi, mutasi stok & log lama dipindah ke spreadsheet arsip terpisah agar app tetap cepat. Ringkasan harian tetap tersimpan sehingga grafik & total laporan lama tetap utuh.</p></div>' +
+      '<div class="card pad col gap-12"><div class="row between"><h3>Hapus data pesanan</h3><span class="badge b-red">' + ic('trash', 'sm') + 'Permanen</span></div>' +
+      '<p class="small muted">Untuk membersihkan <b>data uji coba</b> atau pesanan salah input. Untuk data asli yang sudah lama, lebih aman pakai <b>Arsipkan</b> di atas (data dipindah, bukan dibuang). Sebelum menghapus, server otomatis membuat salinan spreadsheet di folder Backup.</p>' +
+      '<div class="grid-form"><div class="field"><label class="label" for="hm-d">Dari tanggal</label><input class="input" type="date" id="hm-d" value="' + CF.isoHari() + '"></div><div class="field"><label class="label" for="hm-s">Sampai tanggal</label><input class="input" type="date" id="hm-s" value="' + CF.isoHari() + '"></div>' +
+      '<div class="field full"><label class="label" for="hm-j">Yang dihapus</label><select class="select" id="hm-j"><option value="batal">Hanya pesanan yang dibatalkan</option><option value="belum">Pesanan belum/tidak lunas (termasuk dibatalkan)</option><option value="semua">Semua pesanan pada periode ini (termasuk yang lunas)</option></select></div></div>' +
+      '<div class="row wrap"><button class="btn btn-secondary" data-act="hmCek" data-loading="Menghitung…">' + ic('search', 'sm') + 'Hitung dulu</button><span class="small faint">Tombol hapus muncul setelah dihitung.</span></div><div id="hm-res"></div></div>';
+    ['hm-d', 'hm-s', 'hm-j'].forEach(id => { b.querySelector('#' + id).onchange = () => { b.querySelector('#hm-res').innerHTML = ''; }; });
   }
+  const hmParam = () => ({ dari: document.getElementById('hm-d').value, sampai: document.getElementById('hm-s').value, jenis: document.getElementById('hm-j').value });
+  A.hmCek = async el => {
+    const p = hmParam(), r = await CF.busy(el, () => CF.api('pesanan.hapusMassal', Object.assign({ dryRun: true }, p), { timeout: 90000 }));
+    if (!r.ok) return CF.err(r);
+    const R = r.data, box = document.getElementById('hm-res');
+    box.innerHTML = !R.jumlah ? '<div class="banner info">' + ic('info') + '<div>Tidak ada pesanan yang cocok pada periode ini.</div></div>' :
+      '<div class="soft-box col gap-8"><div class="row between"><span><b>' + R.jumlah + ' pesanan</b> • ' + esc(R.label) + '</span><span class="small faint">' + esc(p.dari) + ' s.d. ' + esc(p.sampai) + '</span></div>' +
+      '<div class="row wrap small" style="gap:8px">' + (R.lunas ? '<span class="badge b-red">' + R.lunas + ' lunas • ' + rp(R.nominal) + '</span>' : '<span class="badge b-green">Tidak ada yang lunas</span>') + (R.aktif ? '<span class="badge b-amber">' + R.aktif + ' masih aktif</span>' : '') + (R.batal ? '<span class="badge b-neutral">' + R.batal + ' dibatalkan</span>' : '') + '</div>' +
+      '<div class="xs faint">Contoh: ' + R.contoh.map(esc).join(', ') + (R.jumlah > R.contoh.length ? ', …' : '') + '</div>' +
+      '<button class="btn btn-danger" data-act="hmHapus" data-n="' + R.jumlah + '" data-l="' + R.lunas + '" data-nom="' + R.nominal + '" data-lbl="' + esc(R.label) + '" style="align-self:flex-start">' + ic('trash', 'sm') + 'Hapus ' + R.jumlah + ' pesanan…</button></div>';
+  };
+  A.hmHapus = el => {
+    const p = hmParam(), n = +el.dataset.n, l = +el.dataset.l;
+    CF.dialogHapus({ judul: 'Hapus ' + n + ' pesanan?', lunas: l, ringkas: '<div class="soft-box col gap-4"><b>' + n + ' pesanan • ' + esc(el.dataset.lbl) + '</b><span class="small">' + esc(p.dari) + ' s.d. ' + esc(p.sampai) + (l ? ' • ' + l + ' lunas (' + rp(+el.dataset.nom) + ')' : '') + '</span><span class="xs faint">Salinan spreadsheet dibuat otomatis sebelum dihapus.</span></div>' },
+      (alasan, konf) => CF.api('pesanan.hapusMassal', Object.assign({ alasan: alasan, konfirmasi: konf }, p), { timeout: 330000 }),
+      () => { document.getElementById('hm-res').innerHTML = ''; LP.data = null; dashT = 0; CF.refreshLive(); });
+  };
   A.segarkan = async el => { const r = await CF.busy(el, () => CF.api('sistem.segarkan', {})); r.ok ? CF.toast(r.msg, 'ok') : CF.err(r); MN.data = null; CF.refreshLive(); };
   A.arsip = async el => { const n = document.getElementById('ar-b').value; if (!(await CF.confirm({ title: 'Arsipkan data lama?', msg: 'Data lebih lama dari ' + n + ' bulan dipindah ke spreadsheet arsip. Proses bisa memakan beberapa menit.', ok: 'Arsipkan' }))) return; const r = await CF.busy(el, () => CF.api('sistem.arsip', { bulan: Number(n) }, { timeout: 330000 })); r.ok ? CF.toast(r.msg, 'ok', 8000) : CF.err(r); };
 })();

@@ -1,4 +1,4 @@
-# Panduan Instalasi CafeFlow v1.0.0
+# Panduan Instalasi CafeFlow v1.0.2
 ### Smart Cafe POS, QR Ordering & Price List (Cafe + Steam)
 
 Panduan ini ditulis untuk Anda yang **belum pernah** memakai Google Apps Script maupun GitHub. Ikuti tahap demi tahap. Jangan lompati tahap, dan catat setiap hasil yang diminta untuk dicatat.
@@ -154,15 +154,23 @@ Buka `https://USERNAME.github.io/cafeflow/staff.html` → masuk sebagai **owner*
 | 1 | **Pengaturan → Pembayaran & Situs** | **Alamat situs pelanggan** → klik *Pakai alamat saat ini* (atau isi `https://USERNAME.github.io/cafeflow`) → **Simpan**. Wajib — dipakai QR meja |
 | 2 | Pengaturan → Identitas Aplikasi | Nama cafe, tagline, logo (otomatis dipangkas persegi), warna utama & aksen (ada cek kontras + pratinjau), alamat, telepon, jam buka |
 | 3 | Pengaturan → Pembayaran & Situs | Centang metode yang dipakai; isi rekening transfer; unggah gambar **QRIS statis** dari bank Anda |
-| 4 | Pengaturan → Pajak & Struk | Pajak %, biaya layanan, ukuran kertas printer (58/80 mm), pesan bawah struk, email owner untuk ringkasan malam |
+| 4 | Pengaturan → Pajak & Struk | Pajak default **0% (tanpa PPN)** — baris pajak tidak tampil di mana pun. Isi bila suatu saat diperlukan. Juga: biaya layanan, ukuran kertas printer (58/80 mm), pesan bawah struk, email owner untuk ringkasan malam |
 | 5 | Pengaturan → Sesi Meja & Diskon | Wajib PIN meja (disarankan **ON**), batas diskon kasir, tahan pesanan di dapur sampai lunas |
 | 6 | **Menu & Kategori** | Ganti data contoh dengan menu asli, foto, harga, opsi (level pedas, gula, topping) |
 | 7 | **Price List** | Layanan steam (motor, mobil, perawatan) + harga. Tombol **Cetak** QR Price List untuk ditempel di area steam/kasir |
 | 8 | **Meja & QR Code** | Sesuaikan jumlah meja → **Cetak Semua QR** (atau unduh PNG per meja) → laminasi & tempel |
 | 9 | **Pengguna & Hak Akses** | Buat akun untuk tiap kasir/barista (jangan berbagi satu akun). Sandi sementara tampil sekali |
-| 10 | Stok Bahan, Promo & Voucher | Opsional |
+| 10 | **Pengaturan → Pop-up Sambutan** | Gambar promosi, ucapan selamat datang, label "Cafe & Car Wash" — lihat pratinjaunya langsung |
+| 11 | Stok Bahan, Promo & Voucher | Opsional |
 
 > Akun bawaan `kasir` dan `dapur` juga wajib mengganti sandi saat pertama login.
+
+### Pop-up sambutan
+Saat pelanggan scan **QR meja** atau **QR Price List**, muncul pop-up berisi gambar promosi, logo, ucapan *"Selamat Datang di … — Cafe & Car Wash"*, promo yang ditandai "Tampil", lalu dua pilihan besar:
+- dari QR meja: **Pesan Makanan & Minuman** atau **Price List Car Wash**;
+- dari QR Price List: **Lihat Harga Car Wash** atau **Lihat Menu Cafe**.
+
+Pop-up muncul **sekali per hari per HP** (tidak mengganggu saat pelanggan memesan lagi) dan bisa ditutup dengan tombol ✕. Atur teks, gambar (disarankan mendatar ±1200 × 800), dan saklar on/off di **Pengaturan → Pop-up Sambutan** — pratinjaunya berubah langsung saat Anda mengetik. Tanpa gambar, pop-up memakai warna utama dengan ikon kopi & mobil.
 
 ### Fitur Price List (hanya lihat, untuk promosi)
 - Pelanggan yang scan **QR Price List** (atau membuka alamat utama tanpa QR meja) melihat daftar harga **layanan steam** dan menu cafe, promo yang ditandai "Tampil", serta info cafe. **Tidak ada tombol pesan maupun bayar.**
@@ -173,19 +181,41 @@ Buka `https://USERNAME.github.io/cafeflow/staff.html` → masuk sebagai **owner*
 
 ## TAHAP D — Pembayaran Otomatis Midtrans (opsional)
 
-Tanpa Midtrans, aplikasi sudah bisa menerima: **bayar di kasir** (tunai/debit/kredit/QRIS kasir), **transfer manual + bukti**, dan **QRIS statis + bukti** (diverifikasi kasir di menu *Verifikasi Pembayaran*).
+Tanpa Midtrans, aplikasi sudah bisa menerima: **bayar di kasir** (tunai/debit/kredit/QRIS kasir), **transfer manual + bukti**, dan **QRIS statis + bukti** (diverifikasi kasir di menu *Verifikasi Pembayaran*). Midtrans menambah **QRIS dinamis, GoPay, ShopeePay, dan Virtual Account BCA/BNI/BRI** yang terkonfirmasi otomatis.
 
-Untuk **QRIS dinamis, GoPay, ShopeePay, dan Virtual Account BCA/BNI/BRI** yang terkonfirmasi otomatis:
+### D1. Ambil Server Key Sandbox (uji coba, uang tidak sungguhan)
+1. Daftar/masuk di https://dashboard.midtrans.com. Sandbox dan Production dibuka dari alamat yang sama.
+2. Pastikan pilihan **Environment** di bagian atas dashboard = **Sandbox**.
+3. **Settings → Access Keys** → salin **Server Key** (Sandbox diawali `SB-Mid-server-`). Client Key dan Merchant ID **tidak** diperlukan.
 
-1. Daftar di https://dashboard.midtrans.com. Mulai dari mode **Sandbox** (uji coba, uang tidak sungguhan).
-2. Di Midtrans: **Settings → Access Keys** → salin **Server Key** (Sandbox diawali `SB-Mid-server-`).
-3. Di CafeFlow: **Pengaturan → Pembayaran & Situs** → tempel di kolom **Server Key** → **Simpan Server Key** → **Tes koneksi** harus berhasil.
-   > Kunci disimpan di *Script Properties* server, bukan di spreadsheet atau GitHub. Layar hanya menampilkan versi tersamar seperti `SB-M••••••XYZ`.
-4. Di Midtrans: **Settings → Payment → Notification URL** → isi dengan URL `/exec` Anda (sama seperti di `config.js`).
-5. Centang metode QRIS/GoPay/ShopeePay/VA di Pengaturan → Simpan → uji pesan dari HP dengan simulator Sandbox Midtrans.
-6. Setelah akun Midtrans Anda disetujui untuk Production: ganti **Mode → Production**, simpan **Server Key Production**, dan isi ulang Notification URL di dashboard Production.
+### D2. Simpan di CafeFlow
+1. **Pengaturan → Pembayaran & Situs** → pastikan **Mode = Sandbox (uji coba)**.
+2. Tempel di kolom **Server Key** → **Simpan Server Key**. Label berubah menjadi "Server Key tersimpan" dan kunci hanya tampil tersamar.
+3. **Tes koneksi** → harus muncul *"Terhubung ke Midtrans (sandbox)."* Bila muncul *"Server Key ditolak Midtrans"*, kunci salah salin atau mode tidak cocok.
+4. Centang **QRIS dinamis, GoPay, ShopeePay, VA BCA/BNI/BRI** → **Simpan Perubahan** (tombol bawah). Pastikan **Alamat situs pelanggan** sudah terisi — GoPay/ShopeePay memakainya untuk kembali ke halaman pesanan.
 
-> **Catatan jujur:** Google menjawab notifikasi Midtrans dengan *redirect*, sehingga dashboard Midtrans kadang menandai notifikasi "gagal" lalu mengirim ulang. Pembayaran **tetap tercatat** karena server sudah memprosesnya, kiriman ulang tidak menggandakan apa pun, dan CafeFlow juga mengecek status sendiri (saat halaman pelanggan terbuka dan tiap menit lewat jadwal otomatis).
+### D3. Notification URL
+Di Midtrans: **Settings → Payment → Notification URL → Payment notification URL** → tempel URL `/exec` Anda → **Save**.
+
+> **Catatan jujur:** Midtrans tidak menerima jawaban *redirect* (301/302/303), sedangkan Google Apps Script selalu menjawab dengan redirect. Midtrans mungkin mengirim email peringatan *"Redirection status code … not supported"* dan mencoba mengirim ulang. **Pembayaran tetap tercatat**: CafeFlow sudah memproses notifikasi saat pertama diterima, kiriman ulang tidak menggandakan apa pun, dan CafeFlow juga mengecek status sendiri (±6 detik sekali selama halaman bayar pelanggan terbuka, dan tiap menit lewat jadwal otomatis). Bila email peringatan mengganggu, Notification URL boleh dikosongkan — konfirmasi tetap jalan lewat pengecekan otomatis selama `keepWarm` aktif.
+
+### D4. Uji coba di Sandbox
+Buka sesi meja, scan QR meja dari HP, pesan, lalu pilih pembayaran:
+- **VA BCA** (paling mudah): salin nomor VA → buka https://simulator.sandbox.midtrans.com/bca/va/index → masukkan nomor → bayar. BNI: `…/bni/va/index`. BRI: https://simulator.sandbox.midtrans.com/openapi/va/index lalu pilih BRI.
+- **GoPay di HP**: tombol buka GoPay otomatis membuka GoPay Simulator.
+- **QRIS**: simulator QRIS (https://simulator.sandbox.midtrans.com/v2/qris/index) meminta link gambar QR. Alur konfirmasinya sama dengan VA, jadi uji VA/GoPay sudah mewakili.
+
+Dalam beberapa detik pesanan berubah **Lunas** dan muncul di kasir & dapur.
+> ⚠️ Jangan membayar transaksi Sandbox dengan aplikasi bank/e-wallet sungguhan — uang bisa tidak kembali.
+
+### D5. Pindah ke Production (uang sungguhan)
+1. Lengkapi data usaha di Midtrans sampai akun & metode pembayaran disetujui.
+2. Ganti Environment Midtrans ke **Production** → **Settings → Access Keys** → salin Server Key Production (berbeda dari Sandbox).
+3. Di CafeFlow: **Mode → Production** → **Simpan Perubahan** dulu, lalu tempel Server Key Production → **Simpan Server Key** → **Tes koneksi**.
+4. Isi lagi Notification URL di dashboard Midtrans versi Production.
+5. Uji satu transaksi kecil sungguhan sebelum dipakai pelanggan.
+
+> Jangan mengirim Server Key lewat chat, WA, atau screenshot. Kunci Midtrans tidak bisa diganti sendiri — bila bocor, hubungi Support Midtrans.
 
 ---
 
@@ -200,6 +230,30 @@ Untuk **QRIS dinamis, GoPay, ShopeePay, dan Virtual Account BCA/BNI/BRI** yang t
 7. Pukul 23.45 rekap harian dibuat otomatis (dan dikirim ke email owner bila diaktifkan).
 
 **Layar TV:** buka `antrean.html` di browser TV/PC mini → tekan **F11** (layar penuh) → klik layar sekali agar suara panggilan aktif.
+
+---
+
+## Menghapus Pesanan (khusus Owner/Admin)
+
+Layar **Pesanan Masuk** membersihkan dirinya sendiri: tab **Aktif** hanya berisi pesanan yang belum selesai, dan pesanan yang sudah selesai & lunas hilang dari layar keesokan harinya (selama sesi mejanya sudah ditutup). Data aslinya tetap tersimpan untuk laporan. Fitur hapus dipakai untuk **data uji coba** atau **pesanan salah input**.
+
+- **Satu pesanan:** buka detail pesanan (klik kartunya) → ikon 🗑 di kanan bawah. Atau dari **Laporan → Tabel** → ikon 🗑 di ujung baris (untuk pesanan hari-hari sebelumnya).
+- **Banyak sekaligus:** **Pengaturan → Sistem → Hapus data pesanan** → pilih periode dan jenis (*hanya dibatalkan*, *belum/tidak lunas*, atau *semua*) → **Hitung dulu** → **Hapus**. Server otomatis membuat salinan spreadsheet di folder Backup sebelum menghapus.
+- Setiap penghapusan wajib diberi alasan dan diketik **HAPUS**. Pesanan, item, transaksi, dan bukti transfernya dihapus permanen; jejaknya (siapa, kapan, isi pesanan, alasan) tetap tercatat di **Activity Log**.
+- Menghapus pesanan **lunas** ikut mengurangi pendapatan di laporan. Pesanan yang belum diproses dapur mengembalikan stok porsinya.
+- Kasir dan dapur **tidak bisa** menghapus — kasir cukup memakai **Batalkan**.
+- **Saran sebelum buka resmi:** hapus semua pesanan uji coba lewat *Hapus data pesanan → Semua pesanan* pada tanggal-tanggal uji coba, supaya laporan mulai dari nol.
+- Untuk data asli yang sudah berbulan-bulan, pakai **Arsipkan data lama** (data dipindah ke spreadsheet arsip, bukan dibuang).
+
+---
+
+## Menghapus Menu, Kategori & Item Price List
+
+- **Menu & Kategori → tab Menu:** centang menu (atau centang kotak di judul tabel untuk memilih semua yang tampil) → **Hapus terpilih**. Satu menu: ikon 🗑 di ujung baris. Cocok untuk membuang **19 menu contoh** sekaligus sebelum memasukkan menu asli.
+- **Tab Kategori:** ikon 🗑. Bila kategori masih berisi menu, Anda diminta memilih kategori tujuan — menunya dipindahkan dulu, baru kategorinya dihapus. Minimal harus tersisa 1 kategori.
+- **Price List:** centang item (atau centang judul grup, mis. semua "Steam Motor") → **Hapus terpilih**.
+- Riwayat pesanan & laporan lama **tetap utuh** (item pesanan menyimpan salinan nama & harga). Foto yang diunggah dari dashboard ikut dipindah ke sampah Google Drive (bisa dipulihkan 30 hari), kecuali masih dipakai item lain. Semua penghapusan tercatat di Activity Log.
+- Ingin menyembunyikan sementara tanpa menghapus? Pakai **Arsip** (menu) atau matikan **Tampilkan** (price list).
 
 ---
 
@@ -218,19 +272,23 @@ Kolom dikenali dari judulnya (mis. "Nama Menu", "Harga", "Kategori", "No HP"). N
 
 ## Memperbarui Aplikasi
 
+> **Catatan v1.0.2:** setelah `Kode.gs` versi ini dipasang, pajak otomatis diubah menjadi **0%** satu kali (tercatat di Activity Log atas nama "Sistem"). Bila kelak ingin memakai pajak lagi, isi di Pengaturan → Pajak & Struk — tidak akan dinolkan lagi.
+
 **Server (Kode.gs baru):**
 1. Simpan cadangan kode lama (salin ke Notepad).
 2. Tempel `Kode.gs` baru → Simpan.
 3. **Terapkan → Kelola deployment → ✏️ Edit → Versi: Versi baru → Terapkan.**
    > ❌ Jangan "Deployment baru" — URL `/exec` akan berubah dan semua QR/`config.js` harus diganti.
 
-**Tampilan:** salin berkas baru ke folder `cafeflow-frontend` (timpa), lalu dari PowerShell di folder itu:
+**Tampilan:** ekstrak ZIP pembaruan (`update-tampilan-v…zip`, sengaja **tanpa** `js/config.js`), salin seluruh isinya ke folder `cafeflow-frontend`, pilih **Ganti file di tujuan**. Alamat server Anda di `js/config.js` tetap aman. Lalu dari PowerShell di folder itu:
 
 ```bash
 git add .
 git commit -m "Update CafeFlow"
-git push
+git -c credential.helper= push
 ```
+
+Saat diminta *Password*, tempel Personal Access Token dari akun pemilik repository.
 
 Tunggu 1–2 menit, lalu tekan **Ctrl+Shift+R** di browser.
 
@@ -295,7 +353,7 @@ Tunggu 1–2 menit, lalu tekan **Ctrl+Shift+R** di browser.
 
 ## Ringkasan Hasil Uji (sebelum diserahkan)
 
-- **153/153** uji server lulus: hitungan harga/promo/pajak/diskon, nomor pesanan & antrean, pesanan ganda (idempoten), injeksi rumus spreadsheet, normalisasi nomor HP, alur QRIS/VA/webhook (termasuk tanda tangan palsu & nominal berbeda), verifikasi transfer, batal + pengembalian stok, hak akses per peran, kunci login, PIN meja, banyak perangkat per meja, sesi kedaluwarsa, rekap/arsip, import ulang tanpa dobel, CSV, PDF, batch.
-- **Uji browser** (Chrome, desktop + HP): halaman pelanggan, Price List, pesan & bayar, kasir (diskon, terima tunai), dapur, layar TV, dashboard, laporan, menu, meja & QR, pengaturan, import, log — **0 error JavaScript**. Total di layar = total di server.
+- **392** uji server lulus (153 alur utama + 183 hapus pesanan & batas ukuran lembar + 56 fitur v1.0.2: tanpa PPN & penyesuaian otomatis, pop-up sambutan, hapus menu/kategori/price list): hitungan harga/promo/pajak/diskon, nomor pesanan & antrean, pesanan ganda (idempoten), injeksi rumus spreadsheet, normalisasi nomor HP, alur QRIS/VA/webhook (termasuk tanda tangan palsu & nominal berbeda), verifikasi transfer, batal + pengembalian stok, hak akses per peran, kunci login, PIN meja, banyak perangkat per meja, sesi kedaluwarsa, rekap/arsip, import ulang tanpa dobel, CSV, PDF, batch.
+- **Uji browser** (Chrome, desktop + HP): pop-up sambutan, halaman pelanggan, Price List, pesan & bayar, kasir (diskon, terima tunai), dapur, layar TV, dashboard, laporan, menu, meja & QR, pengaturan, import, log, semua fitur hapus — **0 error JavaScript**. Total di layar = total di server.
 - QR meja hasil cetak terbaca kamera (diuji dekoder OpenCV) dan membuka meja yang benar. File Excel laporan terbuka bersih.
 - Server Key yang disimpan dari dashboard masuk ke Script Properties dan **tidak** muncul di spreadsheet.

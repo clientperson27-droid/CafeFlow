@@ -31,7 +31,11 @@
   // ------------------------------------------------------------------
   async function loadBoot() {
     const r = await CF.api('pub.boot');
-    if (r.ok) { S.boot = r.data; CF.store.set('boot', r.data); CF.applyTheme(r.data.set); document.title = (r.data.set.nama_aplikasi || 'CafeFlow') + (S.kode ? ' — Menu' : ' — Price List'); }
+    if (r.ok) {
+      S.boot = r.data; CF.store.set('boot', r.data); CF.applyTheme(r.data.set); document.title = (r.data.set.nama_aplikasi || 'CafeFlow') + (S.kode ? ' — Menu' : ' — Price List');
+      // Menu yang sudah dihapus admin dibuang dari keranjang
+      if (S.cart.length) { const n = S.cart.length; S.cart = S.cart.filter(l => menuById(l.m)); if (S.cart.length !== n) { saveCart(); CF.toast('Beberapa menu di keranjang sudah tidak tersedia dan dihapus.', 'info'); } }
+    }
     else if (!S.boot) CF.err(r, 'Menu gagal dimuat.');
     S.loading = false;
   }
@@ -262,7 +266,7 @@
       (c.dp ? '<div class="sum-row dsc"><span>Diskon Promo (' + esc(S.promo.kode) + ')</span><b>-' + rp(c.dp) + '</b></div>' : '') +
       (c.lyn ? '<div class="sum-row"><span>Biaya Layanan (' + st.layanan_persen + '%)</span><b>' + rp(c.lyn) + '</b></div>' : '') +
       (Number(st.pajak_persen) ? '<div class="sum-row"><span>Pajak ' + esc(st.label_pajak || '') + ' (' + st.pajak_persen + '%)' + (st.harga_termasuk_pajak === 'Y' ? ' termasuk' : '') + '</span><b>' + rp(c.pjk) + '</b></div>' : '') + '</div>' +
-      '<div class="divider dash"></div><div class="total-row"><div><div class="semi">Total Tagihan</div><div class="help">Termasuk pajak & biaya layanan</div></div><div class="big">' + rp(c.tot) + '</div></div>';
+      '<div class="divider dash"></div><div class="total-row"><div><div class="semi">Total Tagihan</div>' + (c.pjk || c.lyn ? '<div class="help">Termasuk ' + [c.pjk ? 'pajak' : '', c.lyn ? 'biaya layanan' : ''].filter(Boolean).join(' & ') + '</div>' : '') + '</div><div class="big">' + rp(c.tot) + '</div></div>';
     const btn = ok ? '<button class="btn btn-primary btn-lg btn-block mt-16" data-act="pesan" data-loading="Mengirim pesanan…"' + (nm ? '' : ' disabled') + '>Pesan Sekarang' + (n ? ' (' + n + ' item)' : '') + ' ' + ic('arrowR') + '</button>' +
       '<p class="help center mt-8">Pesanan langsung diteruskan ke kasir & dapur meja ' + esc(mejaNo()) + '.</p>'
       : '<div class="banner warn mt-16">' + ic('lock') + '<div>Meja belum aktif — minta kasir membuka meja untuk memesan.</div></div>';
@@ -718,12 +722,46 @@
   }
 
   // ------------------------------------------------------------------
+  // Pop-up sambutan — sekali per hari per meja (atau per HP untuk Price List)
+  // ------------------------------------------------------------------
+  const sambutKey = () => 'sambut_' + (S.kode || 'pl') + '_' + CF.isoHari();
+  function bukaSambut() {
+    const st = set();
+    if (!S.boot || !('sambutan_aktif' in st) || st.sambutan_aktif === 'N' || document.getElementById('welcome') || CF.store.get(sambutKey(), 0)) return;
+    if (P.get('o') || /^#\/?(bayar|instruksi|status|struk)/.test(location.hash)) return;   // kembali dari e-wallet / tautan langsung
+    const el = document.createElement('div');
+    el.id = 'welcome'; el.className = 'welcome'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'wl-t');
+    el.innerHTML = CF.welcomeCard(st, { meja: mejaNo(), promo: (S.boot.promo || [])[0] || null, mode: S.kode ? 'meja' : 'pl', showMenu: st.pricelist_tampil_menu !== 'N' });
+    el.addEventListener('click', e => { if (e.target === el) tutupSambut(); });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Escape') tutupSambut();
+      if (e.key === 'Tab') { const f = el.querySelectorAll('button'), a = f[0], z = f[f.length - 1]; if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); } else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); } }
+    });
+    document.body.appendChild(el); document.body.classList.add('no-scroll');
+    setTimeout(() => { const b = el.querySelector('.wl-choice'); if (b) b.focus({ preventScroll: true }); }, 500);
+  }
+  function sambutMeja() {   // nomor meja baru diketahui setelah server menjawab
+    const h = document.querySelector('#welcome .wl-hero');
+    if (h && mejaNo() && !h.querySelector('.wl-pill')) h.insertAdjacentHTML('afterbegin', '<span class="wl-pill">' + ic('qr', 'sm') + 'Meja ' + esc(mejaNo()) + '</span>');
+  }
+  function tutupSambut(h, g) {
+    CF.store.set(sambutKey(), 1);
+    const el = document.getElementById('welcome'); if (!el) return;
+    el.classList.add('out'); document.body.classList.remove('no-scroll');
+    setTimeout(() => el.remove(), 260);
+    if (g) { S.plGrup = g; S.q = ''; }
+    if (h) go(h);
+  }
+  A.sambut = el => tutupSambut(el.dataset.h, el.dataset.g);
+
+  // ------------------------------------------------------------------
   // Mulai
   // ------------------------------------------------------------------
   async function start() {
     if (S.boot) CF.applyTheme(S.boot.set);
     rerender();
-    const jobs = [loadBoot()];
+    bukaSambut();
+    const jobs = [loadBoot().then(() => { if (set().sambutan_aktif === 'N') { const w = document.getElementById('welcome'); if (w) { w.remove(); document.body.classList.remove('no-scroll'); } } else bukaSambut(); })];
     const oParam = P.get('o'), kParam = P.get('k');
     if (oParam && kParam && !S.my.some(x => x.id === oParam)) { S.my.push({ id: oParam, k: kParam, at: Date.now() }); saveMy(); }
     if (S.kode) {
@@ -732,6 +770,7 @@
       jobs.push(cached && cached.t ? refreshStatus(true).then(() => { if (!S.meja.aktif) return masuk(); }) : masuk().then(() => (S.meja && S.meja.t ? refreshStatus(true) : null)));
     } else if (S.my.length) jobs.push(refreshStatus(true));
     await Promise.all(jobs);
+    sambutMeja();
     if (oParam) { const o = await ensureOrder(oParam); if (o) { const r = await CF.api('bayar.cek', { id: o.id, k: o.k }); if (r.ok) mergeOrders([r.data]); history.replaceState(null, '', location.pathname + (S.kode ? '?m=' + S.kode : '') + '#' + (r.ok && r.data.sb === 'lunas' ? 'struk/' : 'status') + '/' + o.id); } }
     rerender();
     // Polling: status pesanan (adaptif) & cek aktivasi meja

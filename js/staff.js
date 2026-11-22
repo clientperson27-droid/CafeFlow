@@ -221,7 +221,8 @@
         (nx && o.st !== 'batal' ? '<button class="btn btn-secondary" data-act="setSt" data-id="' + esc(o.id) + '" data-st="' + nx[0] + '">' + ic(nx[2], 'sm') + 'Tandai ' + nx[1] + '</button>' : '') +
         (o.st === 'siap' ? '<button class="btn btn-tint" data-act="panggil" data-id="' + esc(o.id) + '">' + ic('megaphone', 'sm') + 'Panggil</button>' : '') +
         '<button class="btn btn-secondary btn-icon" data-act="cetak" data-id="' + esc(o.id) + '" aria-label="Cetak struk">' + ic('printer', 'sm') + '</button>' +
-        (o.st !== 'batal' && kasir ? '<button class="btn btn-danger-o" data-act="batal" data-id="' + esc(o.id) + '">' + ic('ban', 'sm') + 'Batalkan</button>' : '') + '</div>';
+        (o.st !== 'batal' && kasir ? '<button class="btn btn-danger-o" data-act="batal" data-id="' + esc(o.id) + '">' + ic('ban', 'sm') + 'Batalkan</button>' : '') +
+        (isRole('admin') ? '<button class="btn btn-ghost btn-icon" style="color:var(--red-text)" data-act="hapusPsn" data-id="' + esc(o.id) + '" aria-label="Hapus pesanan permanen" title="Hapus pesanan permanen">' + ic('trash', 'sm') + '</button>' : '') + '</div>';
     };
     ST.drawer = { refresh: refresh, close: () => { bd.remove(); dr.remove(); ST.drawer = null; } };
     bd.onclick = closeDrawer;
@@ -232,6 +233,30 @@
   CF.acts.closeDrawer = closeDrawer;
   CF.acts.openDr = el => openDrawer(el.dataset.id);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && ST.drawer && !document.querySelector('.backdrop')) closeDrawer(); });
+  // Dialog hapus permanen (khusus Admin/Owner) — dipakai drawer & tabel laporan.
+  // info: { np, mn, tot, sb, st }  •  extra: { judul, ringkas, kirim(alasan, konfirmasi) → Promise<res> }
+  CF.dialogHapus = (info, kirim, onDone) => {
+    const lunas = info.lunas || (info.sb === 'lunas' ? 1 : 0);
+    const m = CF.modal({ title: info.judul || ('Hapus pesanan ' + info.np + '?'), size: 'sm',
+      body: (info.ringkas || '<div class="soft-box row between"><span><b>' + esc(info.np) + '</b>' + (info.mn ? ' • Meja ' + esc(info.mn) : '') + '</span><b class="tnum">' + rp(info.tot) + '</b></div>') +
+        '<div class="banner danger mt-12">' + ic('alert') + '<div>Data pesanan, item, dan transaksinya <b>dihapus permanen</b> dari database. Jejaknya tetap tercatat di Activity Log.' +
+        (lunas ? '<br><b>' + (info.lunas > 1 ? info.lunas + ' pesanan sudah LUNAS' : 'Pesanan ini sudah LUNAS') + ' — pendapatannya ikut hilang dari laporan.</b>' : '') + '</div></div>' +
+        '<div class="field mt-12"><label class="label" for="hp-a">Alasan <span class="req">*</span></label><input class="input" id="hp-a" placeholder="mis. data uji coba / salah input"></div>' +
+        '<div class="field mt-12"><label class="label" for="hp-k">Ketik <b>HAPUS</b> untuk mengonfirmasi</label><input class="input code" id="hp-k" autocomplete="off" autocapitalize="characters"></div>',
+      foot: '<button class="btn btn-secondary" data-x>Batal</button><button class="btn btn-danger" id="hp-ok" disabled>' + ic('trash', 'sm') + 'Hapus Permanen</button>' });
+    const ok = m.$('#hp-ok'), cek = () => { ok.disabled = !(m.$('#hp-a').value.trim().length >= 3 && m.$('#hp-k').value.trim().toUpperCase() === 'HAPUS'); };
+    m.$('#hp-a').oninput = cek; m.$('#hp-k').oninput = cek;
+    ok.onclick = async () => {
+      const r = await CF.busy(ok, () => kirim(m.$('#hp-a').value.trim(), m.$('#hp-k').value.trim()));
+      if (!r.ok) return CF.err(r);
+      m.close(); CF.toast(r.msg, 'ok', 6000); if (onDone) onDone(r);
+    };
+  };
+  CF.acts.hapusPsn = el => {
+    const o = byId(el.dataset.id); if (!o) return;
+    CF.dialogHapus({ np: o.np, mn: o.mn, tot: o.tot, sb: o.sb }, (alasan, konf) => CF.api('pesanan.hapus', { id: o.id, alasan: alasan, konfirmasi: konf }, { timeout: 90000 }),
+      () => { closeDrawer(); CF.refreshLive(); });
+  };
   CF.acts.panggil = async el => { const r = await CF.busy(el, () => CF.api('pesanan.panggil', { id: el.dataset.id })); r && r.ok ? CF.toast(r.msg, 'ok') : CF.err(r); };
   // Terima pembayaran di kasir
   CF.acts.bayarKasir = el => {

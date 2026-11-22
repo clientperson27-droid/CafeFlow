@@ -252,6 +252,29 @@
     return m;
   };
   // Konfirmasi (opsional dengan input alasan) → Promise<false | true | string>
+  // Kartu pop-up sambutan — dipakai halaman pelanggan & pratinjau di Pengaturan
+  // o: { meja, promo:{nama,kode,min}, mode:'meja'|'pl', showMenu }
+  CF.welcomeCard = (st, o) => {
+    o = o || {}; const e = CF.esc, ic = CF.ic, img = st.sambutan_gambar_url, pl = o.mode === 'pl';
+    const ch = pl
+      ? [{ h: 'pricelist', g: 'all', i: 'car', t: 'Lihat Harga Car Wash', s: 'Layanan cuci & perawatan kendaraan' }]
+        .concat(o.showMenu === false ? [] : [{ h: 'pricelist', g: '__menu', i: 'coffee', t: 'Lihat Menu Cafe', s: 'Kopi, makanan & camilan kami' }])
+      : [{ h: 'menu', i: 'utensils', t: 'Pesan Makanan & Minuman', s: 'Pilih menu, pesan & bayar langsung dari HP' },
+        { h: 'pricelist', g: 'all', i: 'car', t: 'Price List Car Wash', s: 'Lihat harga cuci kendaraan sambil bersantai' }];
+    const info = [st.jam_buka ? ic('clock', 'sm') + e(st.jam_buka) : '', st.alamat ? ic('pin', 'sm') + e(st.alamat) : ''].filter(Boolean);
+    return '<div class="wl-card"><div class="wl-hero' + (img ? ' img" style="background-image:url(\'' + e(img) + '\')">' : '">' +
+        '<span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span><div class="wl-art"><span class="a1">' + ic('coffee') + '</span><span class="a2">' + ic('sparkles') + '</span><span class="a3">' + ic('car') + '</span></div>') +
+      (o.meja ? '<span class="wl-pill">' + ic('qr', 'sm') + 'Meja ' + e(o.meja) + '</span>' : '') +
+      '<button class="wl-x" data-act="sambut" aria-label="Tutup">' + ic('x') + '</button></div>' +
+      '<div class="wl-logo">' + CF.logoHtml(st) + '</div><div class="wl-body"><div class="wl-eyebrow">' + e(st.sambutan_judul || 'Selamat Datang di') + '</div>' +
+      '<h2 id="wl-t">' + e(st.nama_aplikasi || 'CafeFlow') + '</h2>' +
+      (st.sambutan_label ? '<div class="wl-tag">' + ic('coffee', 'sm') + '<span>' + e(st.sambutan_label) + '</span>' + ic('car', 'sm') + '</div>' : '') +
+      (st.sambutan_subjudul ? '<p class="wl-sub">' + e(st.sambutan_subjudul) + '</p>' : '') +
+      (o.promo ? '<div class="wl-promo"><span class="pi">' + ic('percent') + '</span><div><b>' + e(o.promo.nama || o.promo.kode) + '</b><span>Pakai kode <b>' + e(o.promo.kode) + '</b>' + (o.promo.min ? ' • <span style="white-space:nowrap">min. ' + CF.rp(o.promo.min) + '</span>' : '') + '</span></div></div>' : '') +
+      '<div class="wl-choices">' + ch.map((c, i) => '<button class="wl-choice' + (i === 0 ? ' primary' : '') + '" data-act="sambut" data-h="' + c.h + '"' + (c.g ? ' data-g="' + c.g + '"' : '') + '>' +
+        '<span class="ci">' + ic(c.i) + '</span><span class="ct"><b>' + c.t + '</b><small>' + c.s + '</small></span><span class="arr">' + ic('arrowR') + '</span></button>').join('') + '</div>' +
+      (info.length ? '<div class="wl-info">' + info.map(x => '<span>' + x + '</span>').join('') + '</div>' : '') + '</div></div>';
+  };
   CF.confirm = function (o) {
     return new Promise(res => {
       const inp = o.input ? '<div class="field mt-12"><label class="label" for="cf-cin">' + CF.esc(o.input.label) + (o.input.required ? ' <span class="req">*</span>' : '') + '</label>' +
